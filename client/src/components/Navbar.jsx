@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { mobile } from "../responsive";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { useNavigate } from 'react-router-dom'
 
 const Container = styled.div`
   height: 60px;
@@ -70,6 +71,7 @@ const MenuItem = styled.div`
 
 const Navbar = () => {
   const quantity = useSelector(state=>state.cart.quantity)
+  const navigate = useNavigate();
   return (
     <Container>
       <Wrapper>
@@ -84,8 +86,9 @@ const Navbar = () => {
           <Logo>MYKART</Logo>
         </Center>
         <Right>
-          <MenuItem>REGISTER</MenuItem>
-          <MenuItem>SIGN IN</MenuItem>
+        <button onClick={()=>navigate("/Register")} type="button">REGISTER</button>
+          {/* <MenuItem>REGISTER</MenuItem> */}
+          <button onClick = {()=>navigate("/Login")}type="button">SIGN IN</button>
           <Link to="/cart">
           <MenuItem>
             <Badge badgeContent={quantity} color="primary">

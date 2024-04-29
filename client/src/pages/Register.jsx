@@ -1,5 +1,8 @@
 import styled from "styled-components";
 import { mobile } from "../responsive";
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Container = styled.div`
   width: 100vw;
@@ -55,22 +58,32 @@ const Button = styled.button`
 `;
 
 const Register = () => {
+  const [userName, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+  const handleSubmit = (e) =>{
+     e.preventDefault();
+     axios.post('http://localhost:5000/register', {userName, email, password})
+     .then(result=> console.log(result))
+     navigate('/')
+  }
   return (
     <Container>
       <Wrapper>
         <Title>CREATE AN ACCOUNT</Title>
-        <Form>
-          <Input placeholder="name" />
-          <Input placeholder="last name" />
-          <Input placeholder="username" />
-          <Input placeholder="email" />
-          <Input placeholder="password" />
+        <Form onSubmit = {handleSubmit}>
+          <Input placeholder="name"  />
+          <Input placeholder="lastname" />
+          <Input placeholder="username" name = "username" required onChange={(e) => setUsername(e.target.value)}/>
+          <Input placeholder="email" name = "email" required onChange={(e) => setEmail(e.target.value)}/>
+          <Input placeholder="password" name = "passsword" required onChange={(e) => setPassword(e.target.value)}/>
           <Input placeholder="confirm password" />
           <Agreement>
             By creating an account, I consent to the processing of my personal
             data in accordance with the <b>PRIVACY POLICY</b>
           </Agreement>
-          <Button>CREATE</Button>
+          <Button type = "submit" >CREATE</Button>
         </Form>
       </Wrapper>
     </Container>
