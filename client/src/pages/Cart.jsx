@@ -1,5 +1,5 @@
 import { Add, Remove } from "@material-ui/icons";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import styled from "styled-components";
 import Announcement from "../components/Announcement";
 import Footer from "../components/Footer";
@@ -8,7 +8,8 @@ import { mobile } from "../responsive";
 import StripeCheckout from "react-stripe-checkout";
 import { useEffect, useState } from "react";
 import { userRequest } from "../requestMethods";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router-dom";
+import { removeProduct } from "../redux/cartRedux";
 
 const KEY = process.env.REACT_APP_STRIPE;
 
@@ -162,10 +163,41 @@ const Button = styled.button`
 const Cart = () => {
   const cart = useSelector((state) => state.cart);
   const [stripeToken, setStripeToken] = useState(null);
+  const [quantities, setQuantities] = useState(
+    cart.products.reduce((acc, product) => {
+      acc[product._id] = product.quantity;
+      return acc;
+    }, {})
+  );
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const onToken = (token) => {
     setStripeToken(token);
+  };
+
+  const handleQuantity = (type, productId) => {
+    setQuantities((prevQuantities) => {
+      const newQuantities = { ...prevQuantities };
+      if (type === "dec") {
+        if (newQuantities[productId] > 1) {
+          newQuantities[productId] -= 1;
+        }
+      } else {
+        newQuantities[productId] += 1;
+      }
+      return newQuantities;
+    });
+  };
+
+  const calculateTotal = () => {
+    return cart.products.reduce((total, product) => {
+      return total + product.price * quantities[product._id];
+    }, 0);
+  };
+
+  const handleRemoveClick = (productId) => {
+    dispatch(removeProduct({ id: productId }));
   };
 
   useEffect(() => {
@@ -173,15 +205,20 @@ const Cart = () => {
       try {
         const res = await userRequest.post("/checkout/payment", {
           tokenId: stripeToken.id,
-          amount: 500,
+          amount: calculateTotal() * 100,
         });
-                navigate.push("/success", {
-          stripeData: res.data,
-          products: cart, });
+        navigate("/success", {
+          state: {
+            stripeData: res.data,
+            products: cart.products,
+          },
+        });
       } catch {}
     };
+
     stripeToken && makeRequest();
-  }, [stripeToken, cart.total, navigate]);
+  }, [stripeToken, navigate]);
+
   return (
     <Container>
       <Navbar />
@@ -191,7 +228,7 @@ const Cart = () => {
         <Top>
           <TopButton>CONTINUE SHOPPING</TopButton>
           <TopTexts>
-            <TopText>Shopping Bag(2)</TopText>
+            <TopText>Shopping Bag({cart.products.length})</TopText>
             <TopText>Your Wishlist (0)</TopText>
           </TopTexts>
           <TopButton type="filled">CHECKOUT NOW</TopButton>
@@ -199,7 +236,7 @@ const Cart = () => {
         <Bottom>
           <Info>
             {cart.products.map((product) => (
-              <Product>
+              <Product key={product._id}>
                 <ProductDetail>
                   <Image src={product.img} />
                   <Details>
@@ -213,16 +250,17 @@ const Cart = () => {
                     <ProductSize>
                       <b>Size:</b> {product.size}
                     </ProductSize>
+                    <Button onClick={() => handleRemoveClick(product._id)}>REMOVE</Button>
                   </Details>
                 </ProductDetail>
                 <PriceDetail>
                   <ProductAmountContainer>
-                    <Add />
-                    <ProductAmount>{product.quantity}</ProductAmount>
-                    <Remove />
+                    <Add onClick={() => handleQuantity("inc", product._id)} />
+                    <ProductAmount>{quantities[product._id]}</ProductAmount>
+                    <Remove onClick={() => handleQuantity("dec", product._id)} />
                   </ProductAmountContainer>
                   <ProductPrice>
-                    $ {product.price * product.quantity}
+                    $ {product.price * quantities[product._id]}
                   </ProductPrice>
                 </PriceDetail>
               </Product>
@@ -233,7 +271,7 @@ const Cart = () => {
             <SummaryTitle>ORDER SUMMARY</SummaryTitle>
             <SummaryItem>
               <SummaryItemText>Subtotal</SummaryItemText>
-              <SummaryItemPrice>$ {cart.total}</SummaryItemPrice>
+              <SummaryItemPrice>$ {calculateTotal()}</SummaryItemPrice>
             </SummaryItem>
             <SummaryItem>
               <SummaryItemText>Estimated Shipping</SummaryItemText>
@@ -245,15 +283,15 @@ const Cart = () => {
             </SummaryItem>
             <SummaryItem type="total">
               <SummaryItemText>Total</SummaryItemText>
-              <SummaryItemPrice>$ {cart.total}</SummaryItemPrice>
+              <SummaryItemPrice>$ {calculateTotal()}</SummaryItemPrice>
             </SummaryItem>
             <StripeCheckout
               name="Lama Shop"
               image="https://avatars.githubusercontent.com/u/1486366?v=4"
               billingAddress
               shippingAddress
-              description={`Your total is $${cart.total}`}
-              amount={cart.total * 100}
+              description={`Your total is $${calculateTotal()}`}
+              amount={calculateTotal() * 100}
               token={onToken}
               stripeKey={KEY}
             >
