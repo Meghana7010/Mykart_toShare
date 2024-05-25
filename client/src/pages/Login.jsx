@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
+import { useDispatch, useSelector } from "react-redux";
 import { login } from "../redux/apiCalls";
 import { mobile } from "../responsive";
-import { useDispatch, useSelector } from "react-redux";
-
+import { useNavigate } from "react-router-dom";
 
 
 const Container = styled.div`
@@ -73,12 +73,30 @@ const Error = styled.span`
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [loginAttempted, setLoginAttempted] = useState(false);
   const dispatch = useDispatch();
-  const { isFetching, error } = useSelector((state) => state.user);
+  const { isFetching, error, currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+
+
+
+   useEffect(() => {
+     if ( !error && currentUser  && loginAttempted && isFetching===false) {
+       // Redirect to the home page if login is successful
+  navigate("/");
+     }
+  
+  
+   }, [currentUser, error, loginAttempted, isFetching, navigate]);
 
   const handleClick = (e) => {
     e.preventDefault();
-    login(dispatch, { username, password });
+    if (username.trim() && password.trim()) {
+      setLoginAttempted(true);
+      login(dispatch, { username, password });
+    } else {
+      alert("Please fill in both fields");
+    }
   };
 
   return (
@@ -87,19 +105,23 @@ const Login = () => {
         <Title>SIGN IN</Title>
         <Form>
           <Input
-            placeholder="username"
+            placeholder="Username"
+            value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
           <Input
-            placeholder="password"
+            placeholder="Password"
             type="password"
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <Button onClick={handleClick} disabled={isFetching}>
             LOGIN
           </Button>
-          {error && <Error>Something went wrong...</Error>}
-          <Link>DO NOT YOU REMEMBER THE PASSWORD?</Link>
+         
+          {error && <Error>Something went wrong. Please try again.</Error> }
+
+          <Link>DO YOU NOT REMEMBER THE PASSWORD?</Link>
           <Link>CREATE A NEW ACCOUNT</Link>
         </Form>
       </Wrapper>

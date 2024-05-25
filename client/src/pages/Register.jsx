@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { mobile } from "../responsive";
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Container = styled.div`
@@ -58,16 +57,39 @@ const Button = styled.button`
 `;
 
 const Register = () => {
-  const [userName, setUsername] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const handleSubmit = (e) =>{
-     e.preventDefault();
-     axios.post('http://localhost:5000/register', {userName, email, password})
-     .then(result=> console.log(result))
-     navigate('/')
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Submitting form with data:", { username, email, password });
+  
+    try {
+      const response = await fetch(`http://localhost:5000/api/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+  
+      const responseData = await response.json();
+  
+      if (!response.ok) {
+        console.error("Error response from server:", responseData);
+        throw new Error(`HTTP status ${response.status}`);
+      }
+  
+      console.log("Registration successful:", responseData);
+  
+      // Navigate to another page or show success message
+      navigate("/success");
+    } catch (error) {
+      console.error("Error during registration:", error);
+    }
+  };
+  
   return (
     <Container>
       <Wrapper>
@@ -77,7 +99,7 @@ const Register = () => {
           <Input placeholder="lastname" />
           <Input placeholder="username" name = "username" required onChange={(e) => setUsername(e.target.value)}/>
           <Input placeholder="email" name = "email" required onChange={(e) => setEmail(e.target.value)}/>
-          <Input placeholder="password" name = "passsword" required onChange={(e) => setPassword(e.target.value)}/>
+          <Input placeholder="password" name = "password" required onChange={(e) => setPassword(e.target.value)}/>
           <Input placeholder="confirm password" />
           <Agreement>
             By creating an account, I consent to the processing of my personal

@@ -10,6 +10,7 @@ const userSlice = createSlice({
   reducers: {
     loginStart: (state) => {
       state.isFetching = true;
+      state.error = false;
     },
     loginSuccess: (state, action) => {
       state.isFetching = false;
@@ -19,6 +20,7 @@ const userSlice = createSlice({
       state.isFetching = false;
       state.error = true;
     },
+    // Other reducers if needed
   },
 });
 

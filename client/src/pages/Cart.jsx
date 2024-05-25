@@ -8,8 +8,8 @@ import { mobile } from "../responsive";
 import StripeCheckout from "react-stripe-checkout";
 import { useEffect, useState } from "react";
 import { userRequest } from "../requestMethods";
-import { useNavigate, useLocation } from "react-router-dom";
-import { removeProduct } from "../redux/cartRedux";
+import { useNavigate } from "react-router-dom";
+import { removeProduct, emptyCart } from "../redux/cartRedux";
 
 const KEY = process.env.REACT_APP_STRIPE;
 
@@ -200,6 +200,11 @@ const Cart = () => {
     dispatch(removeProduct({ id: productId }));
   };
 
+  const handleEmptyCart = () => {
+    dispatch(emptyCart());
+    setQuantities({});
+  };
+
   useEffect(() => {
     const makeRequest = async () => {
       try {
@@ -231,7 +236,9 @@ const Cart = () => {
             <TopText>Shopping Bag({cart.products.length})</TopText>
             <TopText>Your Wishlist (0)</TopText>
           </TopTexts>
-          <TopButton type="filled">CHECKOUT NOW</TopButton>
+          <TopButton type="filled" onClick={handleEmptyCart}>
+            EMPTY CART
+          </TopButton>
         </Top>
         <Bottom>
           <Info>
