@@ -293,8 +293,8 @@ const Cart = () => {
               <SummaryItemPrice>$ {calculateTotal()}</SummaryItemPrice>
             </SummaryItem>
             <StripeCheckout
-              name="Lama Shop"
-              image="https://avatars.githubusercontent.com/u/1486366?v=4"
+              name="MY KART"
+              image="https://aiconica.net/previews/shopping-cart-small-icon-423.png"
               billingAddress
               shippingAddress
               description={`Your total is $${calculateTotal()}`}
